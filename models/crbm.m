@@ -65,7 +65,7 @@ end % END PROPERTIES
 
 methods
 
-	function self = crbm(arch);
+	function self = crbm(arch)
 	% net = mlnn(arch)
 	%--------------------------------------------------------------------------
 	%crbm constructor method. Initilizes a mlnn object, <net> given a user-

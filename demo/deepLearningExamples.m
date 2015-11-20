@@ -36,7 +36,7 @@ function deepLearningExamples(type)
 % DES    
 % stan_s_bury@berkeley.edu
 
-if notDefined('type'), type = 'all'; end
+%if notDefined('type'), type = 'all'; end
 
 switch lower(type)
 
