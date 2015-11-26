@@ -1,4 +1,4 @@
-function [ images, tags ] = LoadData()
+function [ ] = LoadData()
     dataPath = 'C:\Users\Atul\Documents\MATLAB\CV\data\';
     tagPath = 'C:\Users\Atul\Documents\MATLAB\CV\tags\';
     
