@@ -1,6 +1,6 @@
 function [ ] = LoadData()
-    dataPath = 'C:\Users\Atul\Documents\MATLAB\CV\data\';
-    tagPath = 'C:\Users\Atul\Documents\MATLAB\CV\tags\';
+    dataPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/xray_scattering/dataset/data';
+    tagPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/xray_scattering/dataset/tags';
     
     images = cell(13,1);
     tags = cell(1,2);
@@ -10,13 +10,13 @@ function [ ] = LoadData()
     
     level1Data = dir(dataPath);  
     for i = 3 : numel(level1Data)
-        level2Data = dir([dataPath, level1Data(i).name]);
+        level2Data = dir([dataPath,'/',level1Data(i).name]);
         if level2Data(3).isdir() == 0
-            [images, tags, tagCount, tagFreq] = readDir([dataPath, level1Data(i).name], images, expCount, [tagPath, level1Data(i).name], tags, tagCount, tagFreq);
+            [images, tags, tagCount, tagFreq] = readDir([dataPath,'/', level1Data(i).name], images, expCount, [tagPath,'/',level1Data(i).name], tags, tagCount, tagFreq);
             expCount = expCount + 1;
         else
             for j = 3 : numel(level2Data)
-                [images, tags, tagCount, tagFreq] = readDir([dataPath, level1Data(i).name, '\', level2Data(j).name], images, expCount, [tagPath, level1Data(i).name, '\', level2Data(j).name], tags, tagCount, tagFreq);
+                [images, tags, tagCount, tagFreq] = readDir([dataPath, '/',level1Data(i).name, '/', level2Data(j).name], images, expCount, [tagPath,'/',level1Data(i).name, '/', level2Data(j).name], tags, tagCount, tagFreq);
                 expCount = expCount + 1;
             end
         end
@@ -73,11 +73,12 @@ function [ images, tags, tagCount, tagFreq ] = readDir( pathImages, images, expC
         if isempty(strfind(contents(i).name, '.~'))
             images{expCount}{imageCount,1} = contents(i).name;
             %images{expCount}{imageCount,2} = [pathImages, '\', contents(i).name];
-            image =  im2double(imread([pathImages, '\', contents(i).name]));
+            image =  (imread([pathImages, '/', contents(i).name]));
             [m,n] = size(image);
             image = imresize(image,1024/m);
             image = (image - mean(image(:)));
             images{expCount}{imageCount,2} = image;
+            clear image;
             imageCount = imageCount + 1;
         end
     end
@@ -93,7 +94,7 @@ function [ images, tags, tagCount, tagFreq ] = readDir( pathImages, images, expC
                 end
             end
             
-            tagContent = fileread([pathTag, '\', contents(i).name]);
+            tagContent = fileread([pathTag, '/', contents(i).name]);
             tagIdStart = strfind(tagContent, '<tag id="');
             tagIdEnd = strfind(tagContent, '</tag>');
             

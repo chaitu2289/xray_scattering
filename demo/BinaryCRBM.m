@@ -1,30 +1,82 @@
-%dataset = 'mnistSmall';
 
-%[images, tags] load('data.mat');
-numTestRun = 1;
+[images, tags] = load('data.mat');
+dataSize = [1024,1024,1];  % [nY x nX x nChannels]
+imgCount = 1;
+experiments = size(images);
+expToImg = cells(1,1);
+for i = 1 : experiments(1)
+    experimentSize = size(images{i,1});
+    expToImg{i,1} =  experimentSize;
+    for j = 1 : experimentSize(1)
+        data(:,:,imgCount) = images{i,1}{j,2};
+        tag{imgCount,1} = images{i,1}{j,3};
+        imgCount = imgCount + 1;
+    end
+end
+clear images;
+disp('Data Read');
+
+% DEFINE AN ARCHITECTURE
+arch = struct('dataSize', dataSize, ...
+              'nFM', 3, ...
+              'filterSize', [7 7], ...
+              'stride', [2 2], ...
+              'inputType', 'binary');
+
+% GLOBAL OPTIONS
+arch.opts = {'nEpoch', 1, ...
+             'lRate', .00001, ...
+             'displayEvery',1, ...
+             'sparsity', .02, ...
+             'sparseGain', 5};% , ...
+%            'visFun', @visBinaryCRBMLearning}; % UNCOMMENT TO VIEW LEARNING
+
+% INITIALIZE AND TRAIN
+cr = crbm(arch);
+cr = cr.train(data);
+disp('CRBM Training done for data');
+
+i = 1;
+while ~isempty(trainData)
+	% INFER HIDDEN AND POOLING LAYER EXPECTATIONS
+    % CONDITIONED ON SOME INPUT
+    [cr,ep] = cr.poolGivVis(data(:,:,1));
+    cr = cr.hidGivVis(data(:,:,1));
+    [nCols,nRows,k]=size(cr.eHid);
+    features(i,:) = reshape(cr.eHid,nRows*nCols*k,1);
+    i = i + 1;
+    data(:,:,1) = [];
+end
+clear data;
+clear cr;
+disp('Features extracted');
+    
+    
+numTestRun = length(expToImg);
 finalResult = cell(numTestRun);
 for testRun = 1 : numTestRun;
-    [images, tags, m, n] = loadImagesTags;
-    disp('Data Read');
-    dataSize = [m,n,1];  % [nY x nX x nChannels]
-
     trainTag = cell(1,1);
     testTag = cell(1,1);
-    experiments = size(images);
     trainImgCount = 1;
     testImgCount = 1;
-    for i = 1 : experiments(1)
+    for i = 1 : numTestRun
+        offset = 0;
+        if i - 1 >= 1
+            for k = 1 : (i - 1)
+                offset = offset + expToImg{k,1};
+            end
+        end
         experimentSize = size(images{i,1});
         if i ~= testRun
-            for j = 1 : experimentSize(1)
-                trainData(:,:,trainImgCount) = images{i,1}{j,2};
-                trainTag{trainImgCount,1} = images{i,1}{j,3};
+            for j = 1 : expToImg{i,1}
+                trainFeatures(trainImgCount,:) = features(j+offset,:);
+                trainTag{trainImgCount,1} = tag{j+offset,1};
                 trainImgCount = trainImgCount + 1;
             end
         else
             for j = 1 : experimentSize(1)
-                testData(:,:,testImgCount) = images{i,1}{j,2};
-                testTag{testImgCount,1} = images{i,1}{j,3};
+                testFeatures(testImgCount,:) = features(j+offset,:);
+                testTag{testImgCount,1} = tag{j+offset,1};
                 testImgCount = testImgCount + 1;
             end
         end
@@ -32,60 +84,6 @@ for testRun = 1 : numTestRun;
     disp('Training and Test data created');
     clear images;
 
-    % DEFINE AN ARCHITECTURE
-    arch = struct('dataSize', dataSize, ...
-        	'nFM', 3, ...
-            'filterSize', [7 7], ...
-            'stride', [2 2], ...
-            'inputType', 'binary');
-
-    % GLOBAL OPTIONS
-    arch.opts = {'nEpoch', 1, ...
-        		 'lRate', .00001, ...
-            	 'displayEvery',1, ...
-                 'sparsity', .02, ...
-                'sparseGain', 5};% , ...
-%               'visFun', @visBinaryCRBMLearning}; % UNCOMMENT TO VIEW LEARNING
-
-    % INITIALIZE AND TRAIN
-    cr = crbm(arch);
-    cr = cr.train(trainData);
-    disp('CRBM Training done for trainData');
-
-    i = 1;
-    while ~isempty(trainData)
-        % INFER HIDDEN AND POOLING LAYER EXPECTATIONS
-        % CONDITIONED ON SOME INPUT
-        [cr,ep] = cr.poolGivVis(trainData(:,:,1));
-        cr = cr.hidGivVis(trainData(:,:,1));
-        [nCols,nRows,k]=size(cr.eHid);
-        trainFeatures(i,:) = reshape(cr.eHid,nRows*nCols*k,1);
-        i = i + 1;
-        trainData(:,:,1) = [];
-    end
-    clear trainData;
-    clear cr;
-    disp('Train features extracted');
-
-    % INITIALIZE AND TRAIN
-    cr = crbm(arch);
-    cr = cr.train(testData);
-    disp('CRBM Training done for testData');
-    
-    i = 1;
-    while ~isempty(testData)
-        % INFER HIDDEN AND POOLING LAYER EXPECTATIONS
-        % CONDITIONED ON SOME INPUT
-        [cr,ep] = cr.poolGivVis(testData(:,:,1));
-        cr = cr.hidGivVis(testData(:,:,1));
-        [nCols,nRows,k]=size(cr.eHid);
-        testFeatures(i,:) = reshape(cr.eHid,nRows*nCols*k,1);
-        i = i + 1;
-        testData(:,:,1) = [];
-    end
-    clear testData;
-    clear cr;
-    disp('Test features extracted');
 
     models = cell(length(tags),1);
     % SVM Training
@@ -112,6 +110,8 @@ for testRun = 1 : numTestRun;
             end
         end
         [predict_label, accuracy, dec_values] = svmpredict(double(testLabel),double(testFeatures),models{i,1});
+        %result{i,1} = [predict_label, testLabel, tags{i,1}*ones((testImgCount - 1), 1)];
+        %result{i,2} = accuracy;
         finalResult{testRun,i,1} = [predict_label, testLabel, tags{i,1}*ones((testImgCount - 1), 1)];
         finalResult{testRun,i,2} = accuracy;
     end
