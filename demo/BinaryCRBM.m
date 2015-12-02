@@ -4,7 +4,7 @@ images = dataSet.images;
 tags = dataSet.tags;
 clear dataSet;
 
-dataSize = [512,512,1];  % [nY x nX x nChannels]
+dataSize = [256,256,1];  % [nY x nX x nChannels]
 imgCount = 1;
 experiments = size(images);
 Data = [];
@@ -30,7 +30,7 @@ arch = struct('dataSize', dataSize, ...
               'inputType', 'binary');
 
 % GLOBAL OPTIONS
-arch.opts = {'nEpoch', 1, ...
+arch.opts = {'nEpoch', 5, ...
              'lRate', .00001, ...
              'displayEvery',1, ...
              'sparsity', .02, ...
@@ -44,7 +44,7 @@ disp('CRBM Training done for data');
 
 i = 1;
 while ~isempty(Data)
-	% INFER HIDDEN AND POOLING LAYER EXPECTATIONS
+    % INFER HIDDEN AND POOLING LAYER EXPECTATIONS
     % CONDITIONED ON SOME INPUT
     [cr,ep] = cr.poolGivVis(Data(:,:,1));
     cr = cr.hidGivVis(Data(:,:,1));
@@ -55,9 +55,10 @@ while ~isempty(Data)
 end
 clear Data;
 clear cr;
-%save('features.mat','features','-v7.3');
+save('features.mat','features','-v7.3');
 disp('Features extracted');
-    
+%Features = load('features.mat');
+%features = Features.features;
     
 numTestRun = length(expToImg);
 finalResult = cell(numTestRun,1);

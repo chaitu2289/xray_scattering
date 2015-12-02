@@ -1,6 +1,9 @@
 function [ ] = LoadData()
-    dataPath = '/home/chaitanya/dataset/data';
-    tagPath = '/home/chaitanya/dataset/tags';
+    dataPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/dataset/data';
+    tagPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/dataset/tags';
+    
+    %dataPath = '/home/chaitanya/dataset/data';
+    %tagPath = '/home/chaitanya/dataset/tags';
     
     images = cell(13,1);
     tags = cell(1,2);
@@ -74,7 +77,7 @@ function [ images, tags, tagCount, tagFreq ] = readDir( pathImages, images, expC
             images{expCount}{imageCount,1} = contents(i).name;
             image =  im2double(imread([pathImages, '/', contents(i).name]));
             [m,n] = size(image);
-            image = imresize(image,512/m);
+            image = imresize(image,256/m);
             image = (image - mean(image(:)));
             images{expCount}{imageCount,2} = image;
             clear image;
