@@ -1,6 +1,6 @@
 function [ ] = LoadData()
-    dataPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/xray_scattering/dataset/data';
-    tagPath = '/media/atul/OS/Users/Atul/Documents/MATLAB/CV/xray_scattering/dataset/tags';
+    dataPath = '/home/chaitanya/dataset/data';
+    tagPath = '/home/chaitanya/dataset/tags';
     
     images = cell(13,1);
     tags = cell(1,2);
@@ -72,10 +72,9 @@ function [ images, tags, tagCount, tagFreq ] = readDir( pathImages, images, expC
     for i = 3 : numel(contents)
         if isempty(strfind(contents(i).name, '.~'))
             images{expCount}{imageCount,1} = contents(i).name;
-            %images{expCount}{imageCount,2} = [pathImages, '\', contents(i).name];
-            image =  (imread([pathImages, '/', contents(i).name]));
+            image =  im2double(imread([pathImages, '/', contents(i).name]));
             [m,n] = size(image);
-            image = imresize(image,1024/m);
+            image = imresize(image,512/m);
             image = (image - mean(image(:)));
             images{expCount}{imageCount,2} = image;
             clear image;

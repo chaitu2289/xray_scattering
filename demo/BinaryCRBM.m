@@ -1,14 +1,20 @@
 
-[images, tags] = load('data.mat');
-dataSize = [1024,1024,1];  % [nY x nX x nChannels]
+dataSet = load('data.mat');
+images = dataSet.images;
+tags = dataSet.tags;
+clear dataSet;
+
+dataSize = [512,512,1];  % [nY x nX x nChannels]
 imgCount = 1;
 experiments = size(images);
-expToImg = cells(1,1);
+Data = [];
+expToImg = cell(1,1);
 for i = 1 : experiments(1)
     experimentSize = size(images{i,1});
-    expToImg{i,1} =  experimentSize;
+    expToImg{i,1} =  experimentSize(1);
     for j = 1 : experimentSize(1)
-        data(:,:,imgCount) = images{i,1}{j,2};
+        Data(:,:,imgCount) = images{i,1}{j,2};
+	images{i,1}{j,2} = [];
         tag{imgCount,1} = images{i,1}{j,3};
         imgCount = imgCount + 1;
     end
@@ -18,7 +24,7 @@ disp('Data Read');
 
 % DEFINE AN ARCHITECTURE
 arch = struct('dataSize', dataSize, ...
-              'nFM', 3, ...
+              'nFM', 1, ...
               'filterSize', [7 7], ...
               'stride', [2 2], ...
               'inputType', 'binary');
@@ -33,22 +39,23 @@ arch.opts = {'nEpoch', 1, ...
 
 % INITIALIZE AND TRAIN
 cr = crbm(arch);
-cr = cr.train(data);
+cr = cr.train(Data);
 disp('CRBM Training done for data');
 
 i = 1;
-while ~isempty(trainData)
+while ~isempty(Data)
 	% INFER HIDDEN AND POOLING LAYER EXPECTATIONS
     % CONDITIONED ON SOME INPUT
-    [cr,ep] = cr.poolGivVis(data(:,:,1));
-    cr = cr.hidGivVis(data(:,:,1));
+    [cr,ep] = cr.poolGivVis(Data(:,:,1));
+    cr = cr.hidGivVis(Data(:,:,1));
     [nCols,nRows,k]=size(cr.eHid);
     features(i,:) = reshape(cr.eHid,nRows*nCols*k,1);
     i = i + 1;
-    data(:,:,1) = [];
+    Data(:,:,1) = [];
 end
-clear data;
+clear Data;
 clear cr;
+save('features.mat','features','-v7.3');
 disp('Features extracted');
     
     
