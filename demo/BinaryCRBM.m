@@ -24,7 +24,7 @@ disp('Data Read');
 
 % DEFINE AN ARCHITECTURE
 arch = struct('dataSize', dataSize, ...
-              'nFM', 1, ...
+              'nFM', 3, ...
               'filterSize', [7 7], ...
               'stride', [2 2], ...
               'inputType', 'binary');
@@ -55,12 +55,13 @@ while ~isempty(Data)
 end
 clear Data;
 clear cr;
-save('features.mat','features','-v7.3');
+%save('features.mat','features','-v7.3');
 disp('Features extracted');
     
     
 numTestRun = length(expToImg);
-finalResult = cell(numTestRun);
+finalResult = cell(numTestRun,1);
+finalResult(:) = {cell(length(tags),2)};
 for testRun = 1 : numTestRun;
     trainTag = cell(1,1);
     testTag = cell(1,1);
@@ -73,7 +74,6 @@ for testRun = 1 : numTestRun;
                 offset = offset + expToImg{k,1};
             end
         end
-        experimentSize = size(images{i,1});
         if i ~= testRun
             for j = 1 : expToImg{i,1}
                 trainFeatures(trainImgCount,:) = features(j+offset,:);
@@ -81,7 +81,7 @@ for testRun = 1 : numTestRun;
                 trainImgCount = trainImgCount + 1;
             end
         else
-            for j = 1 : experimentSize(1)
+            for j = 1 : expToImg{i,1}
                 testFeatures(testImgCount,:) = features(j+offset,:);
                 testTag{testImgCount,1} = tag{j+offset,1};
                 testImgCount = testImgCount + 1;
@@ -108,7 +108,6 @@ for testRun = 1 : numTestRun;
 
     disp('SVM traininig done');
     % Predict
-    %result = cell(length(tags),2);
     for i = 1 : length(tags)
         testLabel = ones((testImgCount - 1), 1)*-1;
         for j = 1 : (testImgCount - 1)
@@ -117,10 +116,8 @@ for testRun = 1 : numTestRun;
             end
         end
         [predict_label, accuracy, dec_values] = svmpredict(double(testLabel),double(testFeatures),models{i,1});
-        %result{i,1} = [predict_label, testLabel, tags{i,1}*ones((testImgCount - 1), 1)];
-        %result{i,2} = accuracy;
-        finalResult{testRun,i,1} = [predict_label, testLabel, tags{i,1}*ones((testImgCount - 1), 1)];
-        finalResult{testRun,i,2} = accuracy;
+        finalResult{testRun}{i,1} = [predict_label, testLabel, tags{i,1}*ones((testImgCount - 1), 1)];
+        finalResult{testRun}{i,2} = accuracy;
     end
     disp('Prediction done');
     
@@ -128,3 +125,5 @@ for testRun = 1 : numTestRun;
     clear testLabel;
     clear models;
 end
+
+clear features;
