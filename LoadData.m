@@ -77,7 +77,7 @@ function [ images, tags, tagCount, tagFreq ] = readDir( pathImages, images, expC
             images{expCount}{imageCount,1} = contents(i).name;
             image =  im2double(imread([pathImages, '/', contents(i).name]));
             [m,n] = size(image);
-            image = imresize(image,256/m);
+            image = imresize(image,128/m);
             image = (image - mean(image(:)));
             images{expCount}{imageCount,2} = image;
             clear image;
