@@ -59,13 +59,12 @@ save('features.mat','features','-v7.3');
 %Features = load('features.mat');
 %features = Features.features;
 %clear Features;
-%features = features*features';
 disp('Features extracted');
 
 numTestRun = length(expToImg);
 finalResult = cell(numTestRun,1);
 finalResult(:) = {cell(length(tags),2)};
-for testRun = 1 : numTestRun
+for testRun = 1:numTestRun
     if testRun == 1
         trainFeatures = features((expToImg{1,1} + 1):end,:);
         trainTag = tag((expToImg{1,1} + 1):end,1);
@@ -95,17 +94,16 @@ for testRun = 1 : numTestRun
     testSize = size(testFeatures);
     testImgCount = testSize(1);
     disp('Training and Test data created');
-
+    
     % SVM Training and Prediction
     for i = 1 : length(tags)
-        display(tags{i,1},'tag start');
         trainLabel = ones(trainImgCount, 1)*-1;
         for j = 1 : trainImgCount
             if ismember(tags{i,1}, trainTag{j,1})
                 trainLabel(j,1) = 1;
             end
         end
-        model = svmtrain(double(trainLabel),double(trainFeatures),'-c 10 -g 10^-6');
+        model = train(double(trainLabel),sparse(double(trainFeatures)),'-c 10 -n 4 -s 0');
         clear trainLabel;
 
         testLabel = ones(testImgCount, 1)*-1;
@@ -114,12 +112,11 @@ for testRun = 1 : numTestRun
                 testLabel(j,1) = 1;
             end
         end
-        [predict_label, accuracy, prob] = svmpredict(double(testLabel),double(testFeatures),model,'-b 1');
+        [predict_label, accuracy, prob] = predict(double(testLabel),sparse(double(testFeatures)),model,'-b 1');
         clear model;
         finalResult{testRun}{i,1} = [predict_label, testLabel, tags{i,1}*ones(testImgCount, 1), prob];
         finalResult{testRun}{i,2} = accuracy;
         clear testLabel;
-        display(tags{i,1},'tag done');
     end
 end
 save('finalResult128.mat','finalResult','-v7.3');

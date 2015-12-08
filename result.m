@@ -49,12 +49,7 @@ for i = 1 : 98
    cm = stats{i,2};
    accuracy = (cm(1,1) + cm(2,2))/sum(cm(:));
    precision1 = cm(1,1)/(cm(1,1) + cm(2,1));
-   %precision2 = cm(2,2)/(cm(2,1) + cm(2,2));
    recall1 = cm(1,1)/(cm(1,1) + cm(1,2));
-   %recall2 = cm(2,2)/(cm(2,1) + cm(2,2));
-   %stats{i,3} = accuracy;
    stats{i,3} = precision1;
-   %stats{i,5} = precision2;
    stats{i,4} = recall1;
-   %stats{i,7} = recall2;
 end
